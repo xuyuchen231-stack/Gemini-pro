@@ -1,0 +1,27 @@
+# Local state, profiles, authentication/session material
+data/
+profiles/
+screenshots/
+logs/
+*.log
+config.json
+.env
+.env.*
+!.env.example
+*.sqlite
+*.db
+*.key
+*.pem
+*.p12
+*.pfx
+*.json.bak
+# Python/IDE
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.vscode/
+.idea/
+.DS_Store
