@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gemini Pro | Subscription Assistant</title>
+<style>
+:root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#173765;background:#eef3f8}
+*{box-sizing:border-box}body{margin:0}header{background:#173765;color:#fff;padding:25px max(24px,calc((100vw - 1100px)/2));box-shadow:0 5px 20px #15396720}
+main{max-width:1100px;margin:30px auto;padding:0 18px;display:grid;gap:20px}h1{margin:0;font-size:25px}h2{margin:0 0 14px;font-size:20px}.sub{color:#9ac5ee;margin-top:7px}
+.card{background:white;border:1px solid #dce7f1;border-radius:16px;padding:24px;box-shadow:0 6px 25px #20406a0a}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+button{border:0;background:#2775bc;color:#fff;padding:12px 15px;border-radius:9px;cursor:pointer;font-weight:600}
+button.secondary{background:#e6f0f9;color:#173765}button:hover{filter:brightness(.94)}
+label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px}input,textarea{font:inherit;width:100%;border:1px solid #cad9e7;border-radius:8px;padding:10px}
+small,.muted{color:#5e718a}.warn{background:#f3f8fc;padding:12px;border-left:4px solid #2775bc;border-radius:6px}li{margin:8px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.entry{padding:12px 0;border-bottom:1px solid #edf2f7}
+</style></head><body><header><h1>Gemini Pro · Subscription Assistant</h1>
+<div class="sub">Local-first · Privacy-respecting · Official Google workflows</div></header>
+<main><section class="card"><h2>Open an official Google page</h2>
+<div class="grid"><div><p>Find eligible Google AI Pro offers and review your plan.</p><button onclick="openOfficial('google_one')">Open Google One</button></div>
+<div><p>Check subscriptions and cancel renewal yourself.</p><button onclick="openOfficial('google_play')">Google Play subscriptions</button></div>
+<div><p>Review your sign-in and account security settings.</p><button onclick="openOfficial('google_account')">Google Account</button></div></div>
+<p class="warn">Sign in only on Google's official page. This application never asks for your Google password, 2FA seed or bank card.</p></section>
+<section class="grid"><div class="card"><h2>Add a local note</h2><form id="form">
+<label>Account label (do not enter password)</label><input name="label" placeholder="Personal Gmail" maxlength="80" required>
+<label>Plan</label><input name="plan" placeholder="Google AI Pro / trial / none" maxlength="100">
+<label>Expiry / renewal date</label><input name="expiry" placeholder="YYYY-MM-DD (if known)" maxlength="40">
+<label>Notes</label><textarea name="remark" maxlength="300" rows="3" placeholder="Verified manually on the official page"></textarea>
+<p><button type="submit">Save locally</button></p></form></div>
+<div class="card"><h2>Subscription notes</h2><div id="notes">Loading...</div><p><button class="secondary" onclick="exportReport()">Export JSON report</button></p><small>Notes remain in the local data directory. Export files may contain personal information you entered; review before sharing.</small></div></section>
+<section class="card"><h2>Safety checklist</h2><ul><li>Verify prices, offer terms and eligibility on Google.</li><li>Check the renewal date and cancel on the official page if desired.</li><li>Never commit your local <code>data/</code> folder to GitHub.</li><li>No promotion manipulation, automatic payment or account password storage.</li></ul></section></main>
+<script>
+const token="__TOKEN__";
+async function api(path,method="GET",body){
+  const res=await fetch(path,{method,headers:{"Content-Type":"application/json","X-Session-Token":token},body:body?JSON.stringify(body):undefined});
+  if(!res.ok)throw new Error("Request failed: "+res.status);return res.json();
+}
+async function refresh(){
+try{const d=await api("/api/state");const host=document.getElementById("notes");host.textContent="";
+if(!d.notes.length){host.textContent="No notes yet.";return;}
+for(const n of d.notes){const box=document.createElement("div");box.className="entry";
+for(const text of [n.label,n.plan,n.expiry,n.remark]){const p=document.createElement("div");p.textContent=text||"";box.appendChild(p)}host.appendChild(box)}
+}catch(e){alert(e.message)}
+}
+async function openOfficial(page){try{await api("/api/open","POST",{page})}catch(e){alert(e.message)}}
+document.getElementById("form").addEventListener("submit",async e=>{
+e.preventDefault();const f=new FormData(e.target);try{await api("/api/note","POST",Object.fromEntries(f));e.target.reset();refresh()}catch(err){alert(err.message)}
+});
+async function exportReport(){try{const data=await api("/api/report");const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="subscription-report.json";a.click();URL.revokeObjectURL(a.href)}catch(e){alert(e.message)}}
+refresh();
+</script></body></html>
